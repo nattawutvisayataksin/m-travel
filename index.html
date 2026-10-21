@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>M-Travel — บันทึกการเดินทางของฉัน</title>
+  <meta name="description" content="บันทึกท่องเที่ยวส่วนตัว เก็บทุกทริป ทุกความทรงจำ ไว้กันลืม">
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="page-home">
+
+  <div id="demo-banner" class="demo-banner hidden">
+    <span class="demo-text">🌐 โหมดตัวอย่าง — ยังไม่ได้เชื่อมต่อ Supabase ข้อมูลทั้งหมดเป็นข้อมูลสาธิต</span>
+    <a href="admin.html">วิธีตั้งค่า</a>
+    <button class="demo-close" aria-label="ปิดข้อความนี้">✕</button>
+  </div>
+
+  <header class="site-nav" id="site-nav">
+    <div class="nav-inner">
+      <a class="brand" href="index.html">
+        <svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 8C21 8 12 17 12 28c0 14 20 28 20 28s20-14 20-28C52 17 43 8 32 8z" fill="currentColor"/><circle cx="32" cy="27" r="7" fill="#161616"/></svg>
+        <span id="brand-name">M-Travel</span>
+      </a>
+      <button class="nav-toggle" id="nav-toggle" aria-label="เปิด/ปิดเมนู"><span></span><span></span><span></span></button>
+      <div class="nav-collapsible" id="nav-collapsible">
+        <nav class="nav-menu">
+          <a href="index.html" data-nav="home">หน้าแรก</a>
+          <div class="nav-dropdown" id="nav-countries">
+            <button type="button" class="nav-drop-btn">ประเทศ <span class="caret">▾</span></button>
+            <div class="nav-drop-panel" id="countries-panel"></div>
+          </div>
+          <a href="about.html" data-nav="about">เกี่ยวกับฉัน</a>
+          <a href="admin.html" data-nav="admin">ผู้ดูแล</a>
+        </nav>
+        <form class="nav-search" id="nav-search-form" action="index.html" method="get" role="search">
+          <input type="search" id="nav-search-input" name="q" placeholder="ค้นหาทริป…" autocomplete="off">
+          <button type="submit" aria-label="ค้นหา">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero" id="hero">
+    <div class="hero-bg" id="hero-bg"></div>
+    <div class="hero-content">
+      <h1 class="hero-title" id="hero-title">M-Travel</h1>
+      <p class="hero-tagline" id="hero-tagline">บันทึกการเดินทางของฉัน</p>
+    </div>
+  </section>
+
+  <section class="stats-strip" id="stats-strip" aria-label="สถิติการเดินทาง"></section>
+
+  <main class="container main-content">
+    <div class="filter-bar" id="filter-bar">
+      <div class="filter-group">
+        <select id="filter-country" class="input" aria-label="กรองตามประเทศ"></select>
+        <select id="filter-year" class="input" aria-label="กรองตามปี"></select>
+        <select id="filter-sort" class="input" aria-label="เรียงลำดับ">
+          <option value="new">ใหม่สุดก่อน</option>
+          <option value="old">เก่าสุดก่อน</option>
+          <option value="name">เรียงตามชื่อ</option>
+        </select>
+        <button id="clear-filters" class="linklike hidden">ล้างตัวกรอง</button>
+      </div>
+      <p class="result-count" id="result-count"></p>
+    </div>
+
+    <div class="posts" id="posts"></div>
+
+    <div id="empty-state" class="empty-state hidden">
+      <p class="empty-emoji">🧳</p>
+      <h2>ยังไม่มีบันทึกทริปที่ตรงกับเงื่อนไข</h2>
+      <p>ลองเปลี่ยนตัวกรองด้านบน หรือเพิ่มทริปใหม่ผ่านหน้า <a href="admin.html">ผู้ดูแล</a></p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p id="footer-copy"></p>
+      <p class="footer-note">เว็บบันทึกท่องเที่ยวส่วนตัว — เก็บทุกเส้นทางไว้ กันลืม</p>
+    </div>
+  </footer>
+
+  <div id="toast-wrap" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
+  <script src="assets/js/config.js" defer></script>
+  <script src="assets/js/demo-data.js" defer></script>
+  <script src="assets/js/app.js" defer></script>
+  <script src="assets/js/index.js" defer></script>
+</body>
+</html>
