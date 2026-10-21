@@ -107,7 +107,7 @@
     if (state.q) {
       var q = state.q.toLowerCase();
       list = list.filter(function (t) {
-        var hay = [t.title, t.country, t.location, t.summary, t.content, (t.highlights || []).join(' ')]
+        var hay = [t.title, t.country, t.location, t.summary, MT.stripTags(t.content), (t.highlights || []).join(' ')]
           .join(' ').toLowerCase();
         return hay.indexOf(q) >= 0;
       });

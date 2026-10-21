@@ -264,9 +264,17 @@
       '</div></div></label>' +
       '<label class="field field-full"><span class="field-label">บทสรุปสั้น (แสดงใต้ชื่อทริป)</span>' +
       '<textarea class="input" id="f-summary" rows="2" placeholder="สรุปทริปใน 1–2 ประโยค"></textarea></label>' +
-      '<label class="field field-full"><span class="field-label">เนื้อหาบันทึก</span>' +
-      '<textarea class="input" id="f-content" rows="9" placeholder="เล่าเรื่องทริปได้ยาว ๆ ตามใจ (เว้นบรรทัดว่าง 1 บรรทัด = ขึ้นย่อหน้าใหม่)"></textarea>' +
-      '<span class="field-hint">เว้นบรรทัดว่าง 1 บรรทัด เพื่อแบ่งย่อหน้า</span></label>' +
+      '<div class="field field-full"><span class="field-label">เนื้อหาบันทึก</span>' +
+      '<div class="rich-toolbar" id="rich-toolbar">' +
+      '<button type="button" class="rt-btn" data-cmd="bold" title="ตัวหนา (Ctrl+B)"><b>B</b></button>' +
+      '<button type="button" class="rt-btn" data-cmd="italic" title="ตัวเอียง (Ctrl+I)"><i>I</i></button>' +
+      '<button type="button" class="rt-btn" data-cmd="underline" title="ขีดเส้นใต้ (Ctrl+U)"><u>U</u></button>' +
+      '<button type="button" class="rt-btn rt-link" data-cmd="link" title="ใส่ลิงก์">' + MT.icon('search') + ' ลิงก์</button>' +
+      '<button type="button" class="rt-btn" data-cmd="insertUnorderedList" title="รายการหัวข้อ">• ลิสต์</button>' +
+      '<button type="button" class="rt-btn" data-cmd="removeFormat" title="ล้างรูปแบบของข้อความที่เลือก">✕ ล้างรูปแบบ</button>' +
+      '</div>' +
+      '<div class="input rich-editor" id="f-content-editor" contenteditable="true" spellcheck="false" data-placeholder="เล่าเรื่องทริปได้ยาว ๆ ตามใจ — กด Enter ขึ้นย่อหน้าใหม่ ใช้ปุ่มด้านบนทำตัวหนา/ใส่ลิงก์ได้เลย"></div>' +
+      '<span class="field-hint">กด Enter = ย่อหน้าใหม่ · ปุ่ม B/I/U หรือ Ctrl+B/I/U ทำตัวหนา–เอียง–ขีดเส้น · ปุ่มลิงก์ใส่ที่อยู่เว็บที่เกี่ยวข้อง</span></div>' +
       '<label class="field field-full"><span class="field-label">จุดเด่นของทริป</span>' +
       '<textarea class="input" id="f-highlights" rows="4" placeholder="หนึ่งบรรทัดต่อหนึ่งข้อ เช่น&#10;ชมซากุระริมแม่น้ำคาโมะ&#10;ป่าไผ่อาราชิยามะยามเช้า"></textarea></label>' +
       '<div class="field field-full"><span class="field-label">แกลเลอรีรูป</span>' +
@@ -287,6 +295,7 @@
       '</form></div>';
 
     fillEditorForm(trip);
+    wireRichEditor();
     renderPhotoRows();
 
     /* ภาพปก */
@@ -347,6 +356,65 @@
     slot.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  /* ---------- ตัวแก้เนื้อหาแบบรวย ---------- */
+  function wireRichEditor() {
+    var ed = MT.q('#f-content-editor');
+    var toolbar = MT.q('#rich-toolbar');
+    if (!ed || !toolbar) return;
+
+    try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (err) { /* เบราว์เซอร์เก่า */ }
+
+    /* กันโฟกัสหลุดจากข้อความที่กำลังเลือกไว้ ตอนกดปุ่ม */
+    toolbar.addEventListener('mousedown', function (e) { e.preventDefault(); });
+
+    toolbar.addEventListener('click', function (e) {
+      var btn = e.target.closest('.rt-btn');
+      if (!btn) return;
+      var cmd = btn.getAttribute('data-cmd');
+      ed.focus();
+      if (cmd === 'link') {
+        var url = window.prompt('ใส่ที่อยู่ลิงก์ (เริ่มด้วย https://):', 'https://');
+        if (!url || url === 'https://') return;
+        document.execCommand('createLink', false, url.trim());
+        Array.prototype.forEach.call(ed.querySelectorAll('a'), function (a) {
+          a.setAttribute('target', '_blank');
+          a.setAttribute('rel', 'noopener noreferrer');
+        });
+      } else if (cmd) {
+        document.execCommand(cmd, false, null);
+      }
+    });
+
+    /* วางข้อความเป็นข้อความล้วน กันโค้ดเศษจาก Word/เว็บอื่น */
+    ed.addEventListener('paste', function (e) {
+      e.preventDefault();
+      var text = (e.clipboardData || window.clipboardData).getData('text/plain') || '';
+      document.execCommand('insertText', false, text);
+    });
+
+    /* placeholder เอง (contenteditable ไม่มี :placeholder ให้ใช้) */
+    function syncEmpty() { ed.classList.toggle('empty', !ed.textContent.trim()); }
+    ed.addEventListener('input', syncEmpty);
+    syncEmpty();
+  }
+
+  function getContentValue() {
+    var ed = MT.q('#f-content-editor');
+    if (!ed) return '';
+    var clean = MT.sanitizeRichHtml(ed.innerHTML);
+    var probe = document.createElement('div');
+    probe.innerHTML = clean;
+    return probe.textContent.trim() ? clean : '';
+  }
+
+  function setContentValue(content) {
+    var ed = MT.q('#f-content-editor');
+    if (!ed) return;
+    var val = String(content || '');
+    ed.innerHTML = MT.isRichText(val) ? MT.sanitizeRichHtml(val) : MT.textToRichHtml(val);
+    ed.classList.toggle('empty', !ed.textContent.trim());
+  }
+
   function fillEditorForm(trip) {
     MT.q('#f-title').value = trip && trip.title ? trip.title : '';
     MT.q('#f-country').value = trip && trip.country ? trip.country : '';
@@ -355,7 +423,7 @@
     MT.q('#f-end').value = trip && trip.end_date ? String(trip.end_date).slice(0, 10) : '';
     MT.q('#f-cover').value = trip && trip.cover_url ? trip.cover_url : '';
     MT.q('#f-summary').value = trip && trip.summary ? trip.summary : '';
-    MT.q('#f-content').value = trip && trip.content ? trip.content : '';
+    setContentValue(trip && trip.content);
     MT.q('#f-highlights').value = trip && Array.isArray(trip.highlights) ? trip.highlights.join('\n') : '';
     MT.q('#f-public').checked = trip ? trip.is_public !== false : true;
   }
@@ -426,7 +494,7 @@
       start_date: MT.q('#f-start').value || null,
       end_date: MT.q('#f-end').value || null,
       summary: MT.q('#f-summary').value.trim(),
-      content: MT.q('#f-content').value.replace(/\r\n/g, '\n').trim(),
+      content: getContentValue(),
       highlights: MT.lines(MT.q('#f-highlights').value),
       cover_url: MT.q('#f-cover').value.trim(),
       photos: editorPhotos.filter(function (p) { return p.url; }),

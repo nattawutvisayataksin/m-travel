@@ -45,9 +45,11 @@
 
   /* ---------- เนื้อหา ---------- */
   var lead = trip.summary ? '<p class="trip-lead">' + MT.escapeHtml(trip.summary) + '</p>' : '';
-  var body = MT.paragraphs(trip.content).map(function (p) {
-    return '<p>' + MT.escapeHtml(p) + '</p>';
-  }).join('');
+  var body = MT.isRichText(trip.content)
+    ? MT.sanitizeRichHtml(trip.content)
+    : MT.paragraphs(trip.content).map(function (p) {
+        return '<p>' + MT.escapeHtml(p).replace(/\n/g, '<br>') + '</p>';
+      }).join('');
 
   var highlights = (Array.isArray(trip.highlights) ? trip.highlights : []).filter(Boolean);
   var highlightsHtml = highlights.length

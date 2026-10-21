@@ -60,6 +60,89 @@
     return String(text || '').split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
   };
 
+  /* ---------- เนื้อหาแบบรวย (ตัวหนา/ลิงก์/ลิสต์) ---------- */
+  var RICH_TAG_RE = /<(p|br|b|strong|i|em|u|a|ul|ol|li|h3|h4|blockquote)\b/i;
+  var ALLOWED_TAGS = { P: 1, BR: 1, B: 1, STRONG: 1, I: 1, EM: 1, U: 1, A: 1, UL: 1, OL: 1, LI: 1, H3: 1, H4: 1, BLOCKQUOTE: 1 };
+
+  MT.isRichText = function (text) {
+    return RICH_TAG_RE.test(String(text || ''));
+  };
+
+  /* ข้อความธรรมดา (ของเก่า) → HTML ย่อหน้า */
+  MT.textToRichHtml = function (text) {
+    return MT.paragraphs(text).map(function (p) {
+      return '<p>' + MT.escapeHtml(p).replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+  };
+
+  /* กรอง HTML ให้เหลือเฉพาะแท็กที่อนุญาต — ปลอดภัยเวลาแสดงผล */
+  MT.sanitizeRichHtml = function (html) {
+    var holder = document.createElement('div');
+    holder.innerHTML = String(html || '');
+
+    /* แท็กพิษพวงนี้ลบทิ้งทั้งก้อน (รวมเนื้อหาข้างใน) */
+    var DROP_TAGS = {
+      SCRIPT: 1, STYLE: 1, IFRAME: 1, OBJECT: 1, EMBED: 1, NOSCRIPT: 1,
+      TEMPLATE: 1, LINK: 1, META: 1, BASE: 1, TITLE: 1, FORM: 1, SVG: 1, MATH: 1
+    };
+
+    function cleanAttrs(el) {
+      Array.prototype.slice.call(el.attributes).forEach(function (attr) {
+        var name = attr.name.toLowerCase();
+        if (!(el.tagName === 'A' && name === 'href')) el.removeAttribute(attr.name);
+      });
+      if (el.tagName === 'A') {
+        var href = (el.getAttribute('href') || '').trim();
+        if (!/^https?:\/\//i.test(href)) {
+          el.removeAttribute('href');
+        } else {
+          el.setAttribute('target', '_blank');
+          el.setAttribute('rel', 'noopener noreferrer');
+        }
+      }
+    }
+
+    function clean(el) {
+      var node = el.firstChild;
+      while (node) {
+        var next = node.nextSibling;
+        if (node.nodeType === 8 || node.nodeType === 7) {
+          node.remove(); /* comment / PI */
+        } else if (node.nodeType === 1) {
+          var tag = (node.tagName || '').toUpperCase();
+          if (DROP_TAGS[tag]) {
+            node.remove();
+          } else if (!ALLOWED_TAGS[tag]) {
+            /* แท็กไม่รู้จัก: ดึงเนื้อหาข้างในออกมาวางแทน แล้วไล่ทำความสะอาดต่อจากลูกที่ย้ายมา */
+            var first = node.firstChild;
+            var child = first;
+            while (child) {
+              var cNext = child.nextSibling;
+              el.insertBefore(child, node);
+              child = cNext;
+            }
+            el.removeChild(node);
+            node = first || next;
+            continue;
+          } else {
+            cleanAttrs(node);
+            clean(node);
+          }
+        }
+        node = next;
+      }
+    }
+
+    clean(holder);
+    return holder.innerHTML.trim();
+  };
+
+  /* ตัดแท็กออก เหลือข้อความล้วน (ใช้ตอนค้นหา) */
+  MT.stripTags = function (text) {
+    return String(text || '').replace(/<[^>]*>/g, ' ');
+  };
+
+
   MT.parseDate = function (value) {
     if (!value) return null;
     var d = new Date(String(value).slice(0, 10) + 'T00:00:00');

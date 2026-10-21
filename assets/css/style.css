@@ -434,6 +434,13 @@ a { color: var(--accent-dark); }
   margin: 0 0 26px;
 }
 .trip-content p, .trip-body > p { line-height: 2; font-size: 1.02rem; margin: 0 0 1.3em; }
+.trip-body > ul, .trip-body > ol { line-height: 2; font-size: 1.02rem; margin: 0 0 1.3em; padding-left: 26px; }
+.trip-body > ul > li, .trip-body > ol > li { margin-bottom: 8px; }
+.trip-body > a { color: var(--accent-dark); text-decoration: underline; word-break: break-word; }
+.trip-body > blockquote { margin: 0 0 1.3em; padding: 12px 20px; border-left: 4px solid var(--accent); background: #fafaf8; color: var(--muted); border-radius: 0 var(--radius) var(--radius) 0; }
+.trip-body > h3, .trip-body > h4 { font-family: var(--font-head); line-height: 1.5; margin: 1.8em 0 0.7em; color: var(--dark); }
+.trip-body > h3 { font-size: 1.3rem; }
+.trip-body > h4 { font-size: 1.12rem; }
 .highlights {
   background: #fafaf8;
   border: 1px solid var(--line);
@@ -582,6 +589,34 @@ a { color: var(--accent-dark); }
 .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 196, 146, 0.15); }
 textarea.input { min-height: 110px; resize: vertical; line-height: 1.7; }
 select.input { width: auto; cursor: pointer; }
+
+/* ---------- ตัวแก้เนื้อหาแบบรวย (ตัวหนา/ลิงก์) ---------- */
+.rich-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.rt-btn {
+  border: 1px solid #d8d8d8; background: #fff; color: var(--text);
+  border-radius: 8px; padding: 5px 12px; cursor: pointer;
+  font-family: var(--font-body); font-size: 14px; line-height: 1.4;
+  transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.rt-btn:hover { border-color: var(--accent); color: var(--accent); }
+.rt-btn:active { box-shadow: 0 0 0 3px rgba(59, 196, 146, 0.15); }
+.rich-editor {
+  min-height: 220px; max-height: 460px; overflow-y: auto;
+  line-height: 1.9; cursor: text; word-break: break-word;
+}
+.rich-editor.empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted);
+  pointer-events: none;
+  display: block;
+}
+.rich-editor:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 196, 146, 0.15); }
+.rich-editor p { margin: 0 0 12px; }
+.rich-editor p:last-child { margin-bottom: 0; }
+.rich-editor ul, .rich-editor ol { margin: 0 0 12px; padding-left: 24px; }
+.rich-editor a { color: var(--accent); text-decoration: underline; }
+.rich-editor blockquote { margin: 0 0 12px; padding: 4px 16px; border-left: 3px solid var(--accent); color: var(--muted); }
+.rich-editor b, .rich-editor strong { font-weight: 700; }
 .field { display: block; }
 .field-label {
   display: block;
