@@ -400,8 +400,7 @@
     if (footer) {
       footer.innerHTML =
         '© ' + new Date().getFullYear() + ' <strong>' + MT.escapeHtml(siteTitle) + '</strong>' +
-        (settings.tagline ? ' — ' + MT.escapeHtml(settings.tagline) : '') +
-        ' · <a href="admin.html">ผู้ดูแลเว็บ</a>';
+        (settings.tagline ? ' — ' + MT.escapeHtml(settings.tagline) : '');
     }
   };
 
