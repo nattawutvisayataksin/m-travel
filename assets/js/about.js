@@ -12,9 +12,11 @@
   var root = MT.q('#about-root');
   if (!root) return;
 
-  var paras = MT.paragraphs(MT.settings.about_text);
-  var body = paras.length
-    ? paras.map(function (p) { return '<p>' + MT.escapeHtml(p) + '</p>'; }).join('')
+  var raw = MT.settings.about_text || '';
+  var body = raw
+    ? (MT.isRichText(raw) ? MT.sanitizeRichHtml(raw) : MT.paragraphs(raw).map(function (p) {
+        return '<p>' + MT.escapeHtml(p) + '</p>';
+      }).join(''))
     : '<p>ยังไม่ได้เขียนเนื้อหาหน้านี้ — แก้ไขได้ที่หน้า <a href="admin.html">ผู้ดูแล</a> → ตั้งค่าเว็บ</p>';
 
   /* แสดงประเทศที่เคยไปเป็นชิป */

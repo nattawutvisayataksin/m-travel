@@ -532,6 +532,18 @@ a { color: var(--accent-dark); }
 /* ---------- หน้าเกี่ยวกับฉัน ---------- */
 .about-wrap { max-width: 780px; margin: 0 auto; padding: 46px 0 70px; }
 .about-body p { line-height: 2; font-size: 1.03rem; }
+.about-body ul, .about-body ol { line-height: 2; font-size: 1.03rem; margin: 0 0 1.3em; padding-left: 28px; }
+.about-body li { margin-bottom: 10px; }
+.about-body ul ul { margin: 10px 0 0; padding-left: 24px; }
+.about-body ul ul li { margin-bottom: 4px; }
+.about-body h3, .about-body h4 { font-family: var(--font-head); color: var(--dark); margin: 1.7em 0 0.6em; line-height: 1.5; }
+.about-body h3 { font-size: 1.32rem; }
+.about-body h4 { font-size: 1.18rem; }
+.about-body a { color: var(--accent-dark); text-decoration: underline; }
+.about-body blockquote { margin: 0 0 1.3em; padding: 12px 20px; border-left: 4px solid var(--accent); background: #fafaf8; color: var(--muted); border-radius: 0 var(--radius) var(--radius) 0; }
+.about-body ol { list-style: decimal; }
+.about-body img { max-width: 100%; height: auto; border-radius: var(--radius); }
+.rich-editor img { max-width: 100%; height: auto; border-radius: var(--radius); }
 .about-chips-title {
   display: flex;
   align-items: center;

@@ -62,7 +62,7 @@
 
   /* ---------- เนื้อหาแบบรวย (ตัวหนา/ลิงก์/ลิสต์) ---------- */
   var RICH_TAG_RE = /<(p|br|b|strong|i|em|u|a|ul|ol|li|h3|h4|blockquote)\b/i;
-  var ALLOWED_TAGS = { P: 1, BR: 1, B: 1, STRONG: 1, I: 1, EM: 1, U: 1, A: 1, UL: 1, OL: 1, LI: 1, H3: 1, H4: 1, BLOCKQUOTE: 1 };
+  var ALLOWED_TAGS = { P: 1, BR: 1, B: 1, STRONG: 1, I: 1, EM: 1, U: 1, A: 1, UL: 1, OL: 1, LI: 1, H3: 1, H4: 1, BLOCKQUOTE: 1, IMG: 1 };
 
   MT.isRichText = function (text) {
     return RICH_TAG_RE.test(String(text || ''));
@@ -87,17 +87,28 @@
     };
 
     function cleanAttrs(el) {
+      var tag = el.tagName;
       Array.prototype.slice.call(el.attributes).forEach(function (attr) {
         var name = attr.name.toLowerCase();
-        if (!(el.tagName === 'A' && name === 'href')) el.removeAttribute(attr.name);
+        var keep = (tag === 'A' && name === 'href') || (tag === 'IMG' && (name === 'src' || name === 'alt'));
+        if (!keep) el.removeAttribute(attr.name);
       });
-      if (el.tagName === 'A') {
+      if (tag === 'A') {
         var href = (el.getAttribute('href') || '').trim();
         if (!/^https?:\/\//i.test(href)) {
           el.removeAttribute('href');
         } else {
           el.setAttribute('target', '_blank');
           el.setAttribute('rel', 'noopener noreferrer');
+        }
+      }
+      if (tag === 'IMG') {
+        var src = (el.getAttribute('src') || '').trim();
+        if (!/^https?:\/\//i.test(src)) {
+          el.removeAttribute('src'); /* กัน src ปลอม เช่น javascript: หรือ data: */
+        } else {
+          el.setAttribute('src', src.replace(/^http:\/\//i, 'https://')); /* เว็บเราเป็น https */
+          el.setAttribute('loading', 'lazy');
         }
       }
     }

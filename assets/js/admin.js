@@ -295,7 +295,7 @@
       '</form></div>';
 
     fillEditorForm(trip);
-    wireRichEditor();
+    wireRichEditor(MT.q('#f-content-editor'), MT.q('#rich-toolbar'));
     renderPhotoRows();
 
     /* ภาพปก */
@@ -356,10 +356,8 @@
     slot.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  /* ---------- ตัวแก้เนื้อหาแบบรวย ---------- */
-  function wireRichEditor() {
-    var ed = MT.q('#f-content-editor');
-    var toolbar = MT.q('#rich-toolbar');
+  /* ---------- ตัวแก้เนื้อหาแบบรวย (ใช้ซ้ำได้ทั้งฟอร์มทริปและหน้าตั้งค่า) ---------- */
+  function wireRichEditor(ed, toolbar) {
     if (!ed || !toolbar) return;
 
     try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (err) { /* เบราว์เซอร์เก่า */ }
@@ -385,11 +383,17 @@
       }
     });
 
-    /* วางข้อความเป็นข้อความล้วน กันโค้ดเศษจาก Word/เว็บอื่น */
+    /* วางแบบคงรูปแบบ (เหมือน Word): กรอง HTML ในคลิปบอร์ดด้วย whitelist ก่อนใส่ทุกครั้ง */
     ed.addEventListener('paste', function (e) {
       e.preventDefault();
-      var text = (e.clipboardData || window.clipboardData).getData('text/plain') || '';
-      document.execCommand('insertText', false, text);
+      var clip = e.clipboardData || window.clipboardData;
+      var html = clip ? (clip.getData('text/html') || '') : '';
+      var text = clip ? (clip.getData('text/plain') || '') : '';
+      if (html) {
+        document.execCommand('insertHTML', false, MT.sanitizeRichHtml(html));
+      } else {
+        document.execCommand('insertText', false, text);
+      }
     });
 
     /* placeholder เอง (contenteditable ไม่มี :placeholder ให้ใช้) */
@@ -398,8 +402,7 @@
     syncEmpty();
   }
 
-  function getContentValue() {
-    var ed = MT.q('#f-content-editor');
+  function getRichValue(ed) {
     if (!ed) return '';
     var clean = MT.sanitizeRichHtml(ed.innerHTML);
     var probe = document.createElement('div');
@@ -407,8 +410,7 @@
     return probe.textContent.trim() ? clean : '';
   }
 
-  function setContentValue(content) {
-    var ed = MT.q('#f-content-editor');
+  function setRichValue(ed, content) {
     if (!ed) return;
     var val = String(content || '');
     ed.innerHTML = MT.isRichText(val) ? MT.sanitizeRichHtml(val) : MT.textToRichHtml(val);
@@ -423,7 +425,7 @@
     MT.q('#f-end').value = trip && trip.end_date ? String(trip.end_date).slice(0, 10) : '';
     MT.q('#f-cover').value = trip && trip.cover_url ? trip.cover_url : '';
     MT.q('#f-summary').value = trip && trip.summary ? trip.summary : '';
-    setContentValue(trip && trip.content);
+    setRichValue(MT.q('#f-content-editor'), trip && trip.content);
     MT.q('#f-highlights').value = trip && Array.isArray(trip.highlights) ? trip.highlights.join('\n') : '';
     MT.q('#f-public').checked = trip ? trip.is_public !== false : true;
   }
@@ -494,7 +496,7 @@
       start_date: MT.q('#f-start').value || null,
       end_date: MT.q('#f-end').value || null,
       summary: MT.q('#f-summary').value.trim(),
-      content: getContentValue(),
+      content: getRichValue(MT.q('#f-content-editor')),
       highlights: MT.lines(MT.q('#f-highlights').value),
       cover_url: MT.q('#f-cover').value.trim(),
       photos: editorPhotos.filter(function (p) { return p.url; }),
@@ -560,9 +562,18 @@
       '<div style="display:flex;gap:8px;margin-top:8px">' +
       '<button type="button" class="btn btn-ghost btn-sm" id="btn-hero-upload">' + MT.icon('upload') + ' อัปโหลดรูป</button>' +
       '</div></div></div></label>' +
-      '<label class="field field-full"><span class="field-label">เนื้อหาหน้า "เกี่ยวกับฉัน"</span>' +
-      '<textarea class="input" id="s-about" rows="7">' + MT.escapeHtml(s.about_text || '') + '</textarea>' +
-      '<span class="field-hint">เว้นบรรทัดว่าง 1 บรรทัด = ขึ้นย่อหน้าใหม่</span></label>' +
+      '<div class="field field-full"><span class="field-label">เนื้อหาหน้า "เกี่ยวกับฉัน"</span>' +
+      '<div class="rich-toolbar" id="s-about-toolbar">' +
+      '<button type="button" class="rt-btn" data-cmd="bold" title="ตัวหนา (Ctrl+B)"><b>B</b></button>' +
+      '<button type="button" class="rt-btn" data-cmd="italic" title="ตัวเอียง (Ctrl+I)"><i>I</i></button>' +
+      '<button type="button" class="rt-btn" data-cmd="underline" title="ขีดเส้นใต้ (Ctrl+U)"><u>U</u></button>' +
+      '<button type="button" class="rt-btn rt-link" data-cmd="link" title="ใส่ลิงก์">' + MT.icon('search') + ' ลิงก์</button>' +
+      '<button type="button" class="rt-btn" data-cmd="insertUnorderedList" title="รายการหัวข้อ (จุดนำหน้า)">• ลิสต์</button>' +
+      '<button type="button" class="rt-btn" data-cmd="insertOrderedList" title="รายการลำดับเลข">1. ลิสต์</button>' +
+      '<button type="button" class="rt-btn" data-cmd="removeFormat" title="ล้างรูปแบบของข้อความที่เลือก">✕ ล้างรูปแบบ</button>' +
+      '</div>' +
+      '<div class="input rich-editor" id="s-about-editor" contenteditable="true" spellcheck="false" data-placeholder="เขียนเรื่องราวเกี่ยวกับตัวคุณ — กด Enter ขึ้นย่อหน้าใหม่ ใช้ปุ่มด้านบนทำ Bullet/ตัวหนา/ลิงก์ และวางข้อความจากที่อื่นได้ (รูปแบบถูกเก็บไว้ให้)"></div>' +
+      '<span class="field-hint">กด Enter = ย่อหน้าใหม่ · • ลิสต์ = Bullet · 1. ลิสต์ = เลขลำดับ · วางข้อความจากเว็บ/Word แล้ว Bullet กับตัวหนาจะติดมาเอง</span></div>' +
       '</div>' +
       '<div class="editor-footer">' +
       '<button type="submit" class="btn btn-accent">' + MT.icon('check') + ' บันทึกการตั้งค่า</button>' +
@@ -578,6 +589,11 @@
     }
     heroInput.addEventListener('input', updateHeroPreview);
     updateHeroPreview();
+
+    /* ตัวแก้เนื้อหา "เกี่ยวกับฉัน" */
+    var aboutEd = MT.q('#s-about-editor');
+    setRichValue(aboutEd, s.about_text);
+    wireRichEditor(aboutEd, MT.q('#s-about-toolbar'));
 
     MT.q('#btn-hero-upload').addEventListener('click', function () {
       var input = document.createElement('input');
@@ -610,7 +626,7 @@
         site_title: MT.q('#s-title').value.trim() || 'M-Travel',
         tagline: MT.q('#s-tagline').value.trim(),
         hero_url: MT.q('#s-hero').value.trim(),
-        about_text: MT.q('#s-about').value.replace(/\r\n/g, '\n').trim(),
+        about_text: getRichValue(MT.q('#s-about-editor')),
       };
       var res = await MT.sb.from('site_settings').upsert(payload);
       if (res.error) { MT.toast('บันทึกไม่สำเร็จ: ' + rlsHint(res.error.message), 'err'); return; }
